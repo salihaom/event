@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Manager Dashboard — EventBridge{% endblock %}
+{% block content %}
+<div class="dashboard-page container">
+    <div class="page-header">
+        <div>
+            <h1>Welcome, {{ request.user.first_name|default:request.user.username }} 👋</h1>
+            <p class="page-sub">Manage your bids and grow your reputation.</p>
+        </div>
+        <a href="{% url 'available_events' %}" class="btn btn-primary">Browse Events</a>
+    </div>
+
+    <div class="stats-grid stats-grid-6">
+        <div class="stat-card card">
+            <div class="stat-icon">📨</div>
+            <div class="stat-value">{{ stats.total_bids }}</div>
+            <div class="stat-label">Total Bids</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value">{{ stats.pending_bids }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">{{ stats.accepted_bids }}</div>
+            <div class="stat-label">Accepted</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">🏁</div>
+            <div class="stat-value">{{ stats.completed_events }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value">{{ stats.average_rating|floatformat:1 }}</div>
+            <div class="stat-label">Avg Rating</div>
+        </div>
+        <div class="stat-card card trust-card">
+            <div class="stat-icon">🛡️</div>
+            <div class="stat-value">{{ stats.trust_score|floatformat:1 }}</div>
+            <div class="stat-label">Trust Score</div>
+        </div>
+    </div>
+
+    {% if unread_notifications %}
+    <div class="alert alert-info">
+        🔔 You have <strong>{{ unread_notifications }}</strong> unread notification{{ unread_notifications|pluralize }}.
+        <a href="{% url 'notifications' %}">View all</a>
+    </div>
+    {% endif %}
+
+    <div class="dashboard-two-col">
+        <div class="dashboard-section">
+            <div class="section-row">
+                <h2>Available Events</h2>
+                <a href="{% url 'available_events' %}" class="link-more">Browse all →</a>
+            </div>
+            {% if available_events %}
+            <div class="card-list">
+                {% for event in available_events %}
+                <div class="card list-card">
+                    <div class="list-card-main">
+                        <span class="category-badge">{{ event.category.icon }} {{ event.category.name }}</span>
+                        <h4>{{ event.title }}</h4>
+                        <div class="card-meta-inline">
+                            <span>📍 {{ event.location }}</span>
+                            <span>💰 ₹{{ event.budget|floatformat:0 }}</span>
+                            <span>📅 {{ event.event_date }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'place_bid' event.pk %}" class="btn btn-sm btn-primary">Bid Now</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🎯</div>
+                <p>No available events matching your profile right now.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="dashboard-section">
+            <div class="section-row">
+                <h2>Recent Bids</h2>
+                <a href="{% url 'my_bids' %}" class="link-more">View all →</a>
+            </div>
+            {% if recent_bids %}
+            <div class="card-list">
+                {% for bid in recent_bids %}
+                <div class="card list-card">
+                    <div class="list-card-main">
+                        <h4>{{ bid.event.title }}</h4>
+                        <div class="card-meta-inline">
+                            <span>💰 ₹{{ bid.price|floatformat:0 }}</span>
+                            <span class="status-badge status-{{ bid.status }}">{{ bid.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'event_detail' bid.event.pk %}" class="btn btn-sm btn-outline">View</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📝</div>
+                <p>You haven't placed any bids yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <div class="section-row"><h2>Quick Actions</h2></div>
+        <div class="quick-actions">
+            <a href="{% url 'available_events' %}" class="quick-action card">
+                <span class="qa-icon">🔍</span>
+                <span class="qa-label">Browse Events</span>
+            </a>
+            <a href="{% url 'my_bids' %}" class="quick-action card">
+                <span class="qa-icon">📨</span>
+                <span class="qa-label">My Bids</span>
+            </a>
+            <a href="{% url 'update_profile' %}" class="quick-action card">
+                <span class="qa-icon">⚙️</span>
+                <span class="qa-label">Edit Profile</span>
+            </a>
+            <a href="{% url 'notifications' %}" class="quick-action card">
+                <span class="qa-icon">🔔</span>
+                <span class="qa-label">Notifications</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

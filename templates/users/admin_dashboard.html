@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — EventBridge{% endblock %}
+{% block content %}
+<div class="dashboard-page container">
+    <div class="page-header">
+        <div>
+            <h1>Admin Dashboard 🛠️</h1>
+            <p class="page-sub">System overview and management controls.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid stats-grid-4">
+        <div class="stat-card card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value">{{ stats.total_users }}</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">🎉</div>
+            <div class="stat-value">{{ stats.customers }}</div>
+            <div class="stat-label">Customers</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">{{ stats.managers }}</div>
+            <div class="stat-label">Managers</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value">{{ stats.total_events }}</div>
+            <div class="stat-label">Total Events</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-value">{{ stats.open_events }}</div>
+            <div class="stat-label">Open Events</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">{{ stats.completed_events }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">📨</div>
+            <div class="stat-value">{{ stats.total_bids }}</div>
+            <div class="stat-label">Total Bids</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">🏷️</div>
+            <div class="stat-value">{{ stats.categories }}</div>
+            <div class="stat-label">Categories</div>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <div class="section-row"><h2>Quick Admin Actions</h2></div>
+        <div class="quick-actions">
+            <a href="{% url 'manage_users' %}" class="quick-action card">
+                <span class="qa-icon">👥</span><span class="qa-label">Manage Users</span>
+            </a>
+            <a href="{% url 'all_events_admin' %}" class="quick-action card">
+                <span class="qa-icon">📋</span><span class="qa-label">All Events</span>
+            </a>
+            <a href="{% url 'all_bids_admin' %}" class="quick-action card">
+                <span class="qa-icon">📨</span><span class="qa-label">All Bids</span>
+            </a>
+            <a href="{% url 'manage_categories' %}" class="quick-action card">
+                <span class="qa-icon">🏷️</span><span class="qa-label">Categories</span>
+            </a>
+            <a href="/admin/" class="quick-action card">
+                <span class="qa-icon">⚙️</span><span class="qa-label">Django Admin</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-two-col">
+        <div class="dashboard-section">
+            <div class="section-row">
+                <h2>Recent Events</h2>
+                <a href="{% url 'all_events_admin' %}" class="link-more">View all →</a>
+            </div>
+            <div class="card-list">
+                {% for event in recent_events %}
+                <div class="card list-card">
+                    <div class="list-card-main">
+                        <h4>{{ event.title }}</h4>
+                        <div class="card-meta-inline">
+                            <span>👤 {{ event.organizer.username }}</span>
+                            <span class="status-badge status-{{ event.status }}">{{ event.get_status_display }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-outline">View</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="section-row">
+                <h2>Recent Users</h2>
+                <a href="{% url 'manage_users' %}" class="link-more">View all →</a>
+            </div>
+            <div class="card-list">
+                {% for u in recent_users %}
+                <div class="card list-card">
+                    <div class="list-card-main">
+                        <h4>{{ u.username }}</h4>
+                        <div class="card-meta-inline">
+                            <span class="user-role-badge role-{{ u.role }}">{{ u.role }}</span>
+                            <span>{{ u.date_joined|date:"M d, Y" }}</span>
+                            {% if not u.is_active %}<span class="badge-red">Inactive</span>{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

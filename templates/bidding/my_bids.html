@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}My Bids — EventBridge{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>My Bids</h1>
+            <p class="page-sub">Track the status of all your submitted proposals.</p>
+        </div>
+        <a href="{% url 'available_events' %}" class="btn btn-primary">Browse Events</a>
+    </div>
+
+    <div class="filter-row">
+        <form method="get" class="filter-bar">
+            <select name="status" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if status_filter %}<a href="{% url 'my_bids' %}" class="btn btn-sm btn-ghost">Clear</a>{% endif %}
+        </form>
+    </div>
+
+    {% if bids %}
+    <div class="card-list">
+        {% for bid in bids %}
+        <div class="card list-card bid-list-card">
+            <div class="bid-list-main">
+                <div class="bid-event-cat">
+                    {% if bid.event.category %}
+                    <span class="category-badge">{{ bid.event.category.icon }} {{ bid.event.category.name }}</span>
+                    {% endif %}
+                </div>
+                <h3><a href="{% url 'event_detail' bid.event.pk %}">{{ bid.event.title }}</a></h3>
+                <div class="card-meta-inline">
+                    <span>📍 {{ bid.event.location }}</span>
+                    <span>📅 {{ bid.event.event_date }}</span>
+                    <span>Event Budget: ₹{{ bid.event.budget|floatformat:0 }}</span>
+                </div>
+                <p class="bid-proposal-preview">{{ bid.proposal|truncatechars:120 }}</p>
+            </div>
+            <div class="bid-list-side">
+                <div class="bid-price-lg">₹{{ bid.price|floatformat:0 }}</div>
+                <span class="status-badge status-{{ bid.status }}">{{ bid.get_status_display }}</span>
+                <div class="bid-date">{{ bid.created_at|date:"M d, Y" }}</div>
+                <div class="bid-list-actions">
+                    <a href="{% url 'event_detail' bid.event.pk %}" class="btn btn-sm btn-outline">View Event</a>
+                    {% if bid.status == 'pending' %}
+                    <form method="post" action="{% url 'withdraw_bid' bid.pk %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-danger" onclick="return confirm('Withdraw this bid?')">Withdraw</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <h3>No bids yet</h3>
+        <p>Browse available events and submit your first proposal.</p>
+        <a href="{% url 'available_events' %}" class="btn btn-primary">Find Events</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

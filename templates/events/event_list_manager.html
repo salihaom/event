@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Browse Events — EventBridge{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Browse Events</h1>
+            <p class="page-sub">Find events that match your services and place a bid.</p>
+        </div>
+    </div>
+
+    <div class="filter-card card">
+        <form method="get" class="filter-form-grid">
+            <div class="form-group">
+                <label class="form-label">Min Budget (₹)</label>
+                <input type="number" name="budget_min" value="{{ filters.budget_min }}" class="form-control" placeholder="e.g. 10000">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Max Budget (₹)</label>
+                <input type="number" name="budget_max" value="{{ filters.budget_max }}" class="form-control" placeholder="e.g. 100000">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" name="location" value="{{ filters.location }}" class="form-control" placeholder="City or region">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if filters.category == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.icon }} {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="{% url 'available_events' %}" class="btn btn-outline">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    {% if events %}
+    <div class="events-count">Showing {{ events.count }} event{{ events.count|pluralize }}</div>
+    <div class="cards-grid cards-grid-3">
+        {% for event in events %}
+        <div class="card event-card">
+            <div class="card-header">
+                <span class="category-badge">{{ event.category.icon }} {{ event.category.name }}</span>
+                <span class="status-badge status-open">Open</span>
+            </div>
+            <h3 class="card-title">{{ event.title }}</h3>
+            <p class="card-text">{{ event.description|truncatechars:100 }}</p>
+            <div class="card-meta">
+                <span>📍 {{ event.location }}</span>
+                <span>📅 {{ event.event_date }}</span>
+                <span>💰 ₹{{ event.budget|floatformat:0 }}</span>
+            </div>
+            <div class="card-footer">
+                <span class="bid-count">{{ event.get_bid_count }} bid{{ event.get_bid_count|pluralize }}</span>
+                <a href="{% url 'place_bid' event.pk %}" class="btn btn-sm btn-primary">Place Bid</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No events found</h3>
+        <p>Try adjusting your filters or check back later for new events.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

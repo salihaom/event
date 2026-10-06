@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventBridge{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-inner">
+        <a href="/" class="nav-logo">Event<span>Bridge</span></a>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                {% if user.role == 'customer' %}
+                    <a href="{% url 'customer_dashboard' %}" class="nav-link">Dashboard</a>
+                    <a href="{% url 'my_events' %}" class="nav-link">My Events</a>
+                    <a href="{% url 'create_event' %}" class="nav-link nav-cta">+ New Event</a>
+                {% elif user.role == 'manager' %}
+                    <a href="{% url 'manager_dashboard' %}" class="nav-link">Dashboard</a>
+                    <a href="{% url 'available_events' %}" class="nav-link">Browse Events</a>
+                    <a href="{% url 'my_bids' %}" class="nav-link">My Bids</a>
+                {% else %}
+                    <a href="{% url 'admin_dashboard' %}" class="nav-link">Admin Panel</a>
+                    <a href="{% url 'manage_users' %}" class="nav-link">Users</a>
+                    <a href="{% url 'all_events_admin' %}" class="nav-link">Events</a>
+                    <a href="{% url 'manage_categories' %}" class="nav-link">Categories</a>
+                {% endif %}
+                <a href="{% url 'notifications' %}" class="nav-link notif-link">
+                    🔔 <span id="notif-badge" class="notif-badge hidden">0</span>
+                </a>
+                <div class="nav-user">
+                    <span class="user-name">{{ user.first_name|default:user.username }}</span>
+                    <span class="user-role-badge role-{{ user.role }}">{{ user.role }}</span>
+                    <a href="{% url 'logout' %}" class="nav-link logout-btn">Sign Out</a>
+                </div>
+            {% else %}
+                <a href="{% url 'login' %}" class="nav-link">Sign In</a>
+                <a href="{% url 'register_customer' %}" class="nav-link nav-cta">Get Started</a>
+            {% endif %}
+            <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
+        </div>
+        <button class="nav-hamburger" id="navHamburger">☰</button>
+    </div>
+    <div class="nav-mobile" id="navMobile">
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'notifications' %}">Notifications</a>
+            <a href="{% url 'logout' %}">Sign Out</a>
+        {% else %}
+            <a href="{% url 'login' %}">Sign In</a>
+            <a href="{% url 'register_customer' %}">Register as Customer</a>
+            <a href="{% url 'register_manager' %}">Register as Manager</a>
+        {% endif %}
+    </div>
+</nav>
+
+<div class="content-wrap">
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+            <button class="alert-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <span class="footer-brand">Event<strong>Bridge</strong></span>
+        <span class="footer-copy">© 2025 EventBridge. All rights reserved.</span>
+    </div>
+</footer>
+
+<script src="/static/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

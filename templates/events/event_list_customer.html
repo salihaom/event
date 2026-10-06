@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}My Events — EventBridge{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>My Events</h1>
+            <p class="page-sub">Track all your posted events and their bid status.</p>
+        </div>
+        <a href="{% url 'create_event' %}" class="btn btn-primary">+ New Event</a>
+    </div>
+
+    <div class="filter-row">
+        <form method="get" class="filter-bar">
+            <select name="status" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if status_filter %}
+            <a href="{% url 'my_events' %}" class="btn btn-sm btn-ghost">Clear Filter</a>
+            {% endif %}
+        </form>
+    </div>
+
+    {% if events %}
+    <div class="cards-grid cards-grid-3">
+        {% for event in events %}
+        <div class="card event-card">
+            <div class="card-header">
+                <span class="category-badge">{{ event.category.icon }} {{ event.category.name }}</span>
+                <span class="status-badge status-{{ event.status }}">{{ event.get_status_display }}</span>
+            </div>
+            <h3 class="card-title">{{ event.title }}</h3>
+            <p class="card-text">{{ event.description|truncatechars:90 }}</p>
+            <div class="card-meta">
+                <span>📍 {{ event.location }}</span>
+                <span>📅 {{ event.event_date }}</span>
+                <span>💰 ₹{{ event.budget|floatformat:0 }}</span>
+            </div>
+            <div class="card-footer">
+                <span class="bid-count">{{ event.get_bid_count }} bid{{ event.get_bid_count|pluralize }}</span>
+                <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-primary">View Bids</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📅</div>
+        <h3>No events found</h3>
+        <p>{% if status_filter %}No events with status "{{ status_filter }}".{% else %}You haven't created any events yet.{% endif %}</p>
+        <a href="{% url 'create_event' %}" class="btn btn-primary">Create Your First Event</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

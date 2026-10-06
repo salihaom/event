@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Customer Dashboard — EventBridge{% endblock %}
+{% block content %}
+<div class="dashboard-page container">
+    <div class="page-header">
+        <div>
+            <h1>Welcome, {{ request.user.first_name|default:request.user.username }} 👋</h1>
+            <p class="page-sub">Here's an overview of your events and activity.</p>
+        </div>
+        <a href="{% url 'create_event' %}" class="btn btn-primary">+ Create Event</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value">{{ stats.total_events }}</div>
+            <div class="stat-label">Total Events</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-value">{{ stats.open_events }}</div>
+            <div class="stat-label">Open for Bids</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value">{{ stats.assigned_events }}</div>
+            <div class="stat-label">Assigned</div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-value">{{ stats.completed_events }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+
+    {% if unread_notifications %}
+    <div class="alert alert-info">
+        🔔 You have <strong>{{ unread_notifications }}</strong> unread notification{{ unread_notifications|pluralize }}.
+        <a href="{% url 'notifications' %}">View all</a>
+    </div>
+    {% endif %}
+
+    <div class="dashboard-section">
+        <div class="section-row">
+            <h2>Recent Events</h2>
+            <a href="{% url 'my_events' %}" class="link-more">View all →</a>
+        </div>
+        {% if events %}
+        <div class="cards-grid cards-grid-3">
+            {% for event in events %}
+            <div class="card event-card">
+                <div class="card-header">
+                    <span class="category-badge">{{ event.category.icon }} {{ event.category.name }}</span>
+                    <span class="status-badge status-{{ event.status }}">{{ event.get_status_display }}</span>
+                </div>
+                <h3 class="card-title">{{ event.title }}</h3>
+                <div class="card-meta">
+                    <span>📍 {{ event.location }}</span>
+                    <span>📅 {{ event.event_date }}</span>
+                    <span>💰 ₹{{ event.budget|floatformat:0 }}</span>
+                </div>
+                <div class="card-footer">
+                    <span class="bid-count">{{ event.get_bid_count }} bid{{ event.get_bid_count|pluralize }}</span>
+                    <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-outline">View Bids</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📅</div>
+            <h3>No events yet</h3>
+            <p>Create your first event and start receiving bids from managers.</p>
+            <a href="{% url 'create_event' %}" class="btn btn-primary">Create Event</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="dashboard-section">
+        <div class="section-row">
+            <h2>Quick Actions</h2>
+        </div>
+        <div class="quick-actions">
+            <a href="{% url 'create_event' %}" class="quick-action card">
+                <span class="qa-icon">✨</span>
+                <span class="qa-label">New Event</span>
+            </a>
+            <a href="{% url 'my_events' %}" class="quick-action card">
+                <span class="qa-icon">📋</span>
+                <span class="qa-label">All Events</span>
+            </a>
+            <a href="{% url 'notifications' %}" class="quick-action card">
+                <span class="qa-icon">🔔</span>
+                <span class="qa-label">Notifications</span>
+            </a>
+            <a href="{% url 'budget_optimizer' %}" class="quick-action card">
+                <span class="qa-icon">💡</span>
+                <span class="qa-label">Budget Optimizer</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

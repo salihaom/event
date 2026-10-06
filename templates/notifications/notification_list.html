@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — EventBridge{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>Notifications 🔔</h1>
+            <p class="page-sub">Stay up to date with your events and bids.</p>
+        </div>
+        {% if notifications %}
+        <form method="post" action="{% url 'clear_notifications' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline" onclick="return confirm('Clear all notifications?')">
+                Clear All
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    {% if notifications %}
+    <div class="notif-list">
+        {% for notif in notifications %}
+        <div class="card notif-card notif-type-{{ notif.notification_type }} {% if not notif.is_read %}notif-unread{% endif %}">
+            <div class="notif-icon">
+                {% if notif.notification_type == 'new_bid' %}📨
+                {% elif notif.notification_type == 'bid_accepted' %}🎉
+                {% elif notif.notification_type == 'bid_rejected' %}❌
+                {% elif notif.notification_type == 'event_assigned' %}✅
+                {% elif notif.notification_type == 'event_completed' %}🏆
+                {% elif notif.notification_type == 'new_review' %}⭐
+                {% elif notif.notification_type == 'event_cancelled' %}🚫
+                {% else %}🔔{% endif %}
+            </div>
+            <div class="notif-body">
+                <div class="notif-title">
+                    {{ notif.title }}
+                    {% if not notif.is_read %}<span class="unread-dot"></span>{% endif %}
+                </div>
+                <div class="notif-message">{{ notif.message }}</div>
+                <div class="notif-meta">
+                    <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
+                    {% if notif.link %}
+                    <a href="{{ notif.link }}" class="notif-link">View →</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔕</div>
+        <h3>No notifications</h3>
+        <p>You're all caught up! Notifications will appear here when there's activity on your events or bids.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

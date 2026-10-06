@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Create Event — EventBridge{% endblock %}
+{% block content %}
+<div class="container form-page">
+    <div class="page-header">
+        <div>
+            <h1>Create New Event</h1>
+            <p class="page-sub">Fill in the details and start receiving bids from managers.</p>
+        </div>
+    </div>
+
+    <div class="form-layout">
+        <div class="form-main">
+            <div class="card form-card">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label">Event Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="field-error">{{ form.title.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description *</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="field-error">{{ form.description.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Category *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="field-error">{{ form.category.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Budget (₹) *</label>
+                            {{ form.budget }}
+                            {% if form.budget.errors %}<div class="field-error">{{ form.budget.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Location *</label>
+                            {{ form.location }}
+                            {% if form.location.errors %}<div class="field-error">{{ form.location.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Event Date *</label>
+                            {{ form.event_date }}
+                            {% if form.event_date.errors %}<div class="field-error">{{ form.event_date.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Post Event</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="form-sidebar">
+            <div class="card sidebar-tips">
+                <h3>💡 Tips for Better Bids</h3>
+                <ul class="tips-list">
+                    <li>Be specific about your requirements</li>
+                    <li>Set a realistic budget to attract quality managers</li>
+                    <li>Include venue details in the description</li>
+                    <li>Mention expected number of guests</li>
+                    <li>List any special requirements upfront</li>
+                </ul>
+            </div>
+
+            {% if templates %}
+            <div class="card sidebar-templates">
+                <h3>📋 Event Templates</h3>
+                <p class="template-hint">Click a template to auto-fill suggestions</p>
+                {% for template in templates %}
+                <div class="template-item" onclick="applyTemplate('{{ template.name }}', '{{ template.description|escapejs }}', '{{ template.estimated_budget_min }}', '{{ template.estimated_budget_max }}')">
+                    <div class="template-name">{{ template.category.icon }} {{ template.name }}</div>
+                    <div class="template-budget">₹{{ template.estimated_budget_min|floatformat:0 }} – ₹{{ template.estimated_budget_max|floatformat:0 }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyTemplate(name, description, budgetMin, budgetMax) {
+    document.getElementById('id_title').value = name;
+    document.getElementById('id_description').value = description;
+    document.getElementById('id_budget').value = budgetMax;
+    document.getElementById('id_title').focus();
+}
+</script>
+{% endblock %}

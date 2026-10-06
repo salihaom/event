@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Place Bid — EventBridge{% endblock %}
+{% block content %}
+<div class="container form-page">
+    <div class="page-header">
+        <h1>Place a Bid</h1>
+        <p class="page-sub">Submit your proposal for this event.</p>
+    </div>
+
+    <div class="form-layout">
+        <div class="form-main">
+            <div class="card form-card">
+                <div class="bid-event-summary">
+                    <div class="bes-label">Bidding on:</div>
+                    <h2 class="bes-title">{{ event.title }}</h2>
+                    <div class="bes-meta">
+                        <span>📍 {{ event.location }}</span>
+                        <span>📅 {{ event.event_date }}</span>
+                        <span>💰 Budget: <strong>₹{{ event.budget|floatformat:0 }}</strong></span>
+                    </div>
+                    <p class="bes-desc">{{ event.description|truncatechars:200 }}</p>
+                </div>
+                <hr class="divider">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label">Your Price (₹) *</label>
+                        <input type="number" name="price" class="form-control" placeholder="Enter your bid amount"
+                            min="1" step="1" max="{{ event.budget }}" required>
+                        <span class="form-hint">Event budget: ₹{{ event.budget|floatformat:0 }}. Competitive bids get better recommendation scores.</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Proposal / Cover Letter *</label>
+                        <textarea name="proposal" class="form-control" rows="6"
+                            placeholder="Describe your services, experience, what you'll provide, and why you're the best fit for this event..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Submit Bid</button>
+                    <a href="{% url 'available_events' %}" class="btn btn-ghost btn-full" style="margin-top:8px">Cancel</a>
+                </form>
+            </div>
+        </div>
+
+        {% if manager_profile %}
+        <div class="form-sidebar">
+            <div class="card sidebar-profile">
+                <h3>Your Profile</h3>
+                <div class="profile-stat">
+                    <span>⭐ Rating</span>
+                    <strong>{{ manager_profile.average_rating|floatformat:1 }}/5</strong>
+                </div>
+                <div class="profile-stat">
+                    <span>🛡️ Trust Score</span>
+                    <strong>{{ manager_profile.trust_score|floatformat:1 }}</strong>
+                </div>
+                <div class="profile-stat">
+                    <span>✅ Completed</span>
+                    <strong>{{ manager_profile.completed_events }} events</strong>
+                </div>
+                <div class="profile-stat">
+                    <span>💰 Price Range</span>
+                    <strong>₹{{ manager_profile.price_min|floatformat:0 }} – ₹{{ manager_profile.price_max|floatformat:0 }}</strong>
+                </div>
+                <hr class="divider">
+                <div class="rec-formula-box">
+                    <h4>Recommendation Formula</h4>
+                    <code class="formula">Score = (1/price)×0.4 + (rating/5)×0.3 + (trust/100)×0.3</code>
+                    <p>Lower price + higher rating + higher trust = better recommendation score.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

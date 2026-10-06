@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.title }} — EventBridge{% endblock %}
+{% block content %}
+<div class="container event-detail-page">
+
+    <div class="breadcrumb">
+        {% if request.user.role == 'customer' %}
+        <a href="{% url 'my_events' %}">My Events</a> / {{ event.title }}
+        {% else %}
+        <a href="{% url 'available_events' %}">Events</a> / {{ event.title }}
+        {% endif %}
+    </div>
+
+    <div class="event-detail-grid">
+        <!-- Event Info Panel -->
+        <div class="event-info-panel">
+            <div class="card event-info-card">
+                <div class="card-header">
+                    <span class="category-badge">{{ event.category.icon }} {{ event.category.name }}</span>
+                    <span class="status-badge status-{{ event.status }}">{{ event.get_status_display }}</span>
+                </div>
+                <h1 class="event-title">{{ event.title }}</h1>
+                <p class="event-description">{{ event.description }}</p>
+
+                <div class="event-meta-list">
+                    <div class="meta-item">
+                        <span class="meta-label">📍 Location</span>
+                        <span class="meta-value">{{ event.location }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📅 Event Date</span>
+                        <span class="meta-value">{{ event.event_date }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">💰 Budget</span>
+                        <span class="meta-value budget-highlight">₹{{ event.budget|floatformat:0 }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">👤 Organizer</span>
+                        <span class="meta-value">{{ event.organizer.get_full_name|default:event.organizer.username }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">📨 Bids</span>
+                        <span class="meta-value">{{ event.get_bid_count }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">🕐 Posted</span>
+                        <span class="meta-value">{{ event.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+
+                {% if request.user.is_authenticated and request.user.role == 'customer' and event.organizer == request.user %}
+                <div class="event-actions">
+                    {% if event.status == 'completed' and not has_reviewed and event.assigned_manager %}
+                    <a href="{% url 'submit_review' event.pk %}" class="btn btn-primary btn-full">⭐ Leave a Review</a>
+                    {% endif %}
+                    {% if event.status in 'open,in_review' %}
+                    <form method="post" action="{% url 'update_event_status' event.pk %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label class="form-label">Update Status</label>
+                            <select name="status" class="form-control">
+                                {% if event.status == 'open' %}
+                                <option value="in_review">Move to Review</option>
+                                <option value="cancelled">Cancel Event</option>
+                                {% elif event.status == 'in_review' %}
+                                <option value="open">Reopen for Bids</option>
+                                <option value="cancelled">Cancel Event</option>
+                                {% elif event.status == 'assigned' %}
+                                <option value="in_progress">Mark In Progress</option>
+                                <option value="cancelled">Cancel Event</option>
+                                {% elif event.status == 'in_progress' %}
+                                <option value="completed">Mark Completed</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline btn-full">Update</button>
+                    </form>
+                    {% endif %}
+                    {% if event.status == 'assigned' or event.status == 'in_progress' %}
+                    <form method="post" action="{% url 'update_event_status' event.pk %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <select name="status" class="form-control">
+                                {% if event.status == 'assigned' %}
+                                <option value="in_progress">Mark In Progress</option>
+                                {% elif event.status == 'in_progress' %}
+                                <option value="completed">Mark Completed</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline btn-full">Update Status</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if request.user.is_authenticated and request.user.role == 'manager' and event.status == 'open' %}
+                <div class="event-actions">
+                    <a href="{% url 'place_bid' event.pk %}" class="btn btn-primary btn-full">Place Bid</a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if event.assigned_manager %}
+            <div class="card assigned-manager-card">
+                <h3>✅ Assigned Manager</h3>
+                <div class="manager-mini-profile">
+                    <div class="manager-info">
+                        <h4>{{ event.assigned_manager.get_full_name|default:event.assigned_manager.username }}</h4>
+                        {% if event.assigned_manager.manager_profile %}
+                        <p>📍 {{ event.assigned_manager.manager_profile.location }}</p>
+                        <p>⭐ {{ event.assigned_manager.manager_profile.average_rating|floatformat:1 }} rating</p>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'manager_profile' event.assigned_manager.pk %}" class="btn btn-sm btn-outline">View Profile</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Bids Panel -->
+        <div class="bids-panel">
+            <div class="bids-header">
+                <h2>Bids <span class="bid-count-badge">{{ bids.count }}</span></h2>
+
+                {% if request.user.role == 'customer' and event.organizer == request.user %}
+                <!-- Filter Bar -->
+                <form method="get" class="filter-bar">
+                    <select name="sort" class="filter-select" onchange="this.form.submit()">
+                        <option value="" {% if not sort_by %}selected{% endif %}>Sort: Recommended</option>
+                        <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Top Rated</option>
+                        <option value="trust" {% if sort_by == 'trust' %}selected{% endif %}>Trust Score</option>
+                    </select>
+                    <input type="text" name="location" placeholder="Filter by location" value="{{ location_filter }}" class="filter-input">
+                    <button type="submit" class="btn btn-sm btn-outline">Apply</button>
+                    {% if sort_by or location_filter %}
+                    <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-ghost">Clear</a>
+                    {% endif %}
+                </form>
+                {% endif %}
+            </div>
+
+            {% if best_bid and not sort_by and not location_filter and request.user.role == 'customer' %}
+            <!-- Recommended Bid Banner -->
+            <div class="recommended-bid-banner card">
+                <div class="recommended-header">
+                    <span class="recommended-badge">🏆 Best Bid Recommendation</span>
+                    <span class="rec-score">Score: {{ best_bid.recommendation_score|floatformat:4 }}</span>
+                </div>
+                <div class="rec-bid-content">
+                    <div class="rec-manager-info">
+                        <h3>{{ best_bid.manager.get_full_name|default:best_bid.manager.username }}</h3>
+                        {% if best_bid.manager.manager_profile %}
+                        <div class="rec-meta">
+                            <span>📍 {{ best_bid.manager.manager_profile.location }}</span>
+                            <span>⭐ {{ best_bid.manager.manager_profile.average_rating|floatformat:1 }}</span>
+                            <span>🛡️ Trust: {{ best_bid.manager.manager_profile.trust_score|floatformat:1 }}</span>
+                        </div>
+                        {% endif %}
+                        <p class="rec-proposal">{{ best_bid.proposal|truncatechars:150 }}</p>
+                    </div>
+                    <div class="rec-bid-price">
+                        <div class="big-price">₹{{ best_bid.price|floatformat:0 }}</div>
+                        {% if event.status == 'open' and request.user == event.organizer %}
+                        <form method="post" action="{% url 'accept_bid' best_bid.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-success">Accept This Bid</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="rec-score-breakdown">
+                    <span class="score-pill">Price Weight: 40%</span>
+                    <span class="score-pill">Rating Weight: 30%</span>
+                    <span class="score-pill">Trust Weight: 30%</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if bids %}
+            <div class="bids-list">
+                {% for bid in bids %}
+                <div class="card bid-card {% if best_bid and bid.pk == best_bid.pk and not sort_by %}bid-recommended{% endif %}">
+                    {% if best_bid and bid.pk == best_bid.pk and not sort_by %}
+                    <div class="bid-rec-tag">⭐ Recommended</div>
+                    {% endif %}
+                    <div class="bid-card-inner">
+                        <div class="bid-manager-info">
+                            <div class="manager-avatar">{{ bid.manager.username|first|upper }}</div>
+                            <div>
+                                <h4>
+                                    <a href="{% url 'manager_profile' bid.manager.pk %}">
+                                        {{ bid.manager.get_full_name|default:bid.manager.username }}
+                                    </a>
+                                </h4>
+                                {% if bid.manager.manager_profile %}
+                                <div class="manager-stats-row">
+                                    <span>📍 {{ bid.manager.manager_profile.location }}</span>
+                                    <span>⭐ {{ bid.manager.manager_profile.average_rating|floatformat:1 }}/5</span>
+                                    <span>🛡️ {{ bid.manager.manager_profile.trust_score|floatformat:1 }}</span>
+                                    <span>✅ {{ bid.manager.manager_profile.completed_events }} events</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="bid-details">
+                            <div class="bid-price-section">
+                                <div class="bid-price">₹{{ bid.price|floatformat:0 }}</div>
+                                <span class="status-badge status-{{ bid.status }}">{{ bid.get_status_display }}</span>
+                            </div>
+                            <div class="bid-score-bar">
+                                <span class="score-label">Rec. Score:</span>
+                                <div class="score-bar-track">
+                                    <div class="score-bar-fill" style="width: {{ bid.recommendation_score|floatformat:4|floatformat:0 }}%"></div>
+                                </div>
+                                <span class="score-num">{{ bid.recommendation_score|floatformat:4 }}</span>
+                            </div>
+                        </div>
+
+                        <div class="bid-proposal">
+                            <p>{{ bid.proposal|truncatechars:200 }}</p>
+                        </div>
+
+                        {% if request.user.role == 'customer' and event.organizer == request.user and bid.status == 'pending' and event.status in 'open,in_review' %}
+                        <div class="bid-actions">
+                            <form method="post" action="{% url 'accept_bid' bid.pk %}" style="display:inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-success">Accept</button>
+                            </form>
+                            <form method="post" action="{% url 'reject_bid' bid.pk %}" style="display:inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Reject this bid?')">Reject</button>
+                            </form>
+                            <a href="{% url 'manager_profile' bid.manager.pk %}" class="btn btn-sm btn-outline">View Profile</a>
+                        </div>
+                        {% endif %}
+
+                        {% if request.user.role == 'manager' and bid.manager == request.user and bid.status == 'pending' %}
+                        <div class="bid-actions">
+                            <form method="post" action="{% url 'withdraw_bid' bid.pk %}">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Withdraw this bid?')">Withdraw</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>No bids yet</h3>
+                {% if request.user.role == 'manager' %}
+                <p>Be the first to place a bid on this event!</p>
+                <a href="{% url 'place_bid' event.pk %}" class="btn btn-primary">Place Bid</a>
+                {% else %}
+                <p>Bids from managers will appear here once they start applying.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

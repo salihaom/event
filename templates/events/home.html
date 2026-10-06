@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}EventBridge — Smart Event Management{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-tag">✦ Smart Event Platform</div>
+        <h1 class="hero-title">Plan Events.<br><span class="accent">Find Managers.</span><br>Bid Smart.</h1>
+        <p class="hero-sub">Connect with verified event managers. Get AI-powered bid recommendations. Turn your vision into reality.</p>
+        <div class="hero-actions">
+            <a href="{% url 'register_customer' %}" class="btn btn-primary btn-lg">Plan an Event</a>
+            <a href="{% url 'register_manager' %}" class="btn btn-outline btn-lg">Join as Manager</a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat-item"><strong>{{ stats.events }}+</strong><span>Events Posted</span></div>
+            <div class="stat-item"><strong>{{ stats.managers }}+</strong><span>Verified Managers</span></div>
+            <div class="stat-item"><strong>{{ stats.categories }}+</strong><span>Categories</span></div>
+        </div>
+    </div>
+</section>
+
+<section class="section categories-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Browse by Category</h2>
+            <p>From weddings to corporate conferences — we've got you covered.</p>
+        </div>
+        <div class="cards-grid cards-grid-4">
+            {% for cat in categories %}
+            <a href="{% url 'create_event' %}?category={{ cat.id }}" class="category-card card">
+                <div class="cat-icon">{{ cat.icon }}</div>
+                <div class="cat-name">{{ cat.name }}</div>
+                <div class="cat-count">{{ cat.events.count }} event{{ cat.events.count|pluralize }}</div>
+            </a>
+            {% empty %}
+            <p class="text-muted">No categories yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section recent-events-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Open Events</h2>
+            <p>Managers — find your next opportunity.</p>
+        </div>
+        <div class="cards-grid cards-grid-3">
+            {% for event in recent_events %}
+            <div class="card event-card">
+                <div class="card-header">
+                    <span class="category-badge">{{ event.category.icon }} {{ event.category.name }}</span>
+                    <span class="status-badge status-{{ event.status }}">{{ event.get_status_display }}</span>
+                </div>
+                <h3 class="card-title">{{ event.title }}</h3>
+                <p class="card-text">{{ event.description|truncatechars:100 }}</p>
+                <div class="card-meta">
+                    <span>📍 {{ event.location }}</span>
+                    <span>📅 {{ event.event_date }}</span>
+                    <span>💰 ₹{{ event.budget|floatformat:0 }}</span>
+                </div>
+                <div class="card-footer">
+                    <span class="bid-count">{{ event.get_bid_count }} bid{{ event.get_bid_count|pluralize }}</span>
+                    {% if user.is_authenticated and user.role == 'manager' %}
+                    <a href="{% url 'place_bid' event.pk %}" class="btn btn-sm btn-primary">Place Bid</a>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline">Sign in to Bid</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-muted">No open events right now.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section how-it-works">
+    <div class="container">
+        <div class="section-header">
+            <h2>How It Works</h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-num">01</div>
+                <h3>Post Your Event</h3>
+                <p>Describe your event with budget, location, and requirements.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">02</div>
+                <h3>Receive Bids</h3>
+                <p>Verified managers place competitive bids on your event.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">03</div>
+                <h3>Smart Recommendations</h3>
+                <p>Our algorithm highlights the best bid based on price, rating, and trust.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">04</div>
+                <h3>Assign & Relax</h3>
+                <p>Select your manager, track progress, and rate afterwards.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

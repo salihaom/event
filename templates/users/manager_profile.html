@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}{{ manager.get_full_name }} — EventBridge{% endblock %}
+{% block content %}
+<div class="container profile-page">
+    <div class="profile-grid">
+        <div class="profile-sidebar">
+            <div class="card profile-card">
+                <div class="profile-avatar-lg">{{ manager.username|first|upper }}</div>
+                <h2 class="profile-name">{{ manager.get_full_name|default:manager.username }}</h2>
+                <p class="profile-username">@{{ manager.username }}</p>
+                <div class="profile-badges">
+                    <span class="user-role-badge role-manager">Manager</span>
+                    {% if profile.is_available %}
+                    <span class="badge-green">Available</span>
+                    {% else %}
+                    <span class="badge-red">Unavailable</span>
+                    {% endif %}
+                </div>
+
+                <div class="profile-scores">
+                    <div class="score-item">
+                        <div class="score-big">{{ profile.average_rating|floatformat:1 }}</div>
+                        <div class="score-stars">
+                            {% for i in "12345" %}
+                            <span class="star {% if forloop.counter <= profile.average_rating|floatformat:0|add:'0' %}star-filled{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                        <div class="score-sub">Average Rating</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-big">{{ profile.trust_score|floatformat:1 }}</div>
+                        <div class="score-sub">Trust Score</div>
+                    </div>
+                </div>
+
+                <div class="profile-meta-list">
+                    <div class="pml-item"><span>📍</span><span>{{ profile.location }}</span></div>
+                    <div class="pml-item"><span>💼</span><span>{{ profile.experience_years }} yrs experience</span></div>
+                    <div class="pml-item"><span>✅</span><span>{{ profile.completed_events }} completed events</span></div>
+                    <div class="pml-item"><span>💰</span><span>₹{{ profile.price_min|floatformat:0 }} – ₹{{ profile.price_max|floatformat:0 }}</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Services Offered</h3>
+                <div class="services-tags">
+                    {% for service in profile.get_services_list %}
+                    <span class="service-tag">{{ service }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-main">
+            {% if profile.bio %}
+            <div class="card">
+                <h3>About</h3>
+                <p>{{ profile.bio }}</p>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <h3>Trust Score Breakdown</h3>
+                <div class="trust-breakdown">
+                    <div class="trust-item">
+                        <span>Rating × 0.5</span>
+                        <div class="trust-bar">
+                            <div class="trust-fill" style="width:{{ profile.average_rating|floatformat:0|add:'0'|divisibleby:1 }}%"></div>
+                        </div>
+                        <strong>{{ profile.average_rating|floatformat:1 }}</strong>
+                    </div>
+                    <div class="trust-item">
+                        <span>Completed Events × 0.3</span>
+                        <strong>{{ profile.completed_events }}</strong>
+                    </div>
+                    <div class="trust-item">
+                        <span>Final Trust Score</span>
+                        <strong class="accent">{{ profile.trust_score|floatformat:2 }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-row">
+                    <h3>Reviews <span class="badge-count">{{ reviews.count }}</span></h3>
+                </div>
+                {% if reviews %}
+                <div class="reviews-list">
+                    {% for review in reviews %}
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <strong>{{ review.reviewer.get_full_name|default:review.reviewer.username }}</strong>
+                                <span class="review-event">for "{{ review.event.title }}"</span>
+                            </div>
+                            <div class="review-rating">
+                                {% for i in "12345" %}
+                                <span class="star {% if forloop.counter <= review.rating %}star-filled{% endif %}">★</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <p class="review-comment">{{ review.comment }}</p>
+                        <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">💬</div>
+                    <p>No reviews yet for this manager.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Update Profile — EventBridge{% endblock %}
+{% block content %}
+<div class="container form-page">
+    <div class="page-header">
+        <h1>Update Manager Profile</h1>
+        <p class="page-sub">Keep your profile updated to improve your trust score and visibility.</p>
+    </div>
+    <div class="form-layout">
+        <div class="form-main">
+            <div class="card form-card">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="form-group">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<span class="form-hint">{{ field.help_text }}</span>{% endif %}
+                        {% if field.errors %}<div class="field-error">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
+                </form>
+            </div>
+        </div>
+        <div class="form-sidebar">
+            <div class="card sidebar-tips">
+                <h3>🛡️ Trust Score Formula</h3>
+                <code class="formula">Score = (Rating × 0.5) + (Completed × 0.3) - (Cancellation Rate × 0.2)</code>
+                <p>Complete more events and maintain a high rating to improve your trust score and appear higher in recommendations.</p>
+                {% if profile %}
+                <hr class="divider">
+                <div class="profile-stat"><span>Current Trust Score:</span><strong>{{ profile.trust_score|floatformat:2 }}</strong></div>
+                <div class="profile-stat"><span>Rating:</span><strong>{{ profile.average_rating|floatformat:1 }}/5</strong></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

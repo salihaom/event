@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}All Events — EventBridge Admin{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>All Events</h1>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline">← Dashboard</a>
+    </div>
+    <div class="card">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Organizer</th>
+                        <th>Category</th>
+                        <th>Budget</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Bids</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td><strong>{{ event.title }}</strong></td>
+                        <td>{{ event.organizer.username }}</td>
+                        <td>{% if event.category %}{{ event.category.icon }} {{ event.category.name }}{% endif %}</td>
+                        <td>₹{{ event.budget|floatformat:0 }}</td>
+                        <td>{{ event.location }}</td>
+                        <td>{{ event.event_date }}</td>
+                        <td><span class="status-badge status-{{ event.status }}">{{ event.get_status_display }}</span></td>
+                        <td>{{ event.get_bid_count }}</td>
+                        <td><a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-outline">View</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" class="text-center text-muted">No events found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
